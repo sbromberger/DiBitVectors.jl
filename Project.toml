@@ -1,0 +1,4 @@
+name = "DiBitVectors"
+uuid = "b332d270-17d7-4a15-8ba9-1b15059bf12d"
+authors = ["Seth Bromberger <github@bromberger.com>"]
+version = "0.1.0"
