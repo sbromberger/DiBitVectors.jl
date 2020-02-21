@@ -1,4 +1,4 @@
-module DiBitVectortors
+module DiBitVectors
 
 import Base: getindex, setindex!, size, length
 
@@ -22,7 +22,7 @@ struct DiBitVector <: AbstractVector{Bool}
     end
 end
 
-@inline checkbounds(D::DiBitVector, n::Integer) = n * 2 ≤ length(D.data) || throw(BoundsError(D, n))
+@inline checkbounds(D::DiBitVector, n::Integer) =  0 < n * 2 ≤ length(D.data) || throw(BoundsError(D, n))
 
 """
     _set_dibit!(D, n, v)
