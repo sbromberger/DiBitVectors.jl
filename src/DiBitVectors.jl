@@ -1,62 +1,70 @@
-module DiBitVectortors
+module DiBitVectors
 
-import Base: getindex, setindex!, size, length
+import Base: getindex, setindex!, size, length, checkbounds, push!, pop!
 
-struct DiBitVector <: AbstractVector{Bool}
-    data::BitVector
-    function DiBitVector(n::Integer, v::Integer = 0)
-        if v == 0
-            data = falses(n*2)
-        elseif v == 3
-            data = trues(n*2)
-        else
-            data = BitVector(undef, n*2)
-            b1 = v >> 1 != 0
-            b2 = v & 0x01 != 0
-            @inbounds for i = 1:n
-                Base.unsafe_bitsetindex!(data.chunks, b1, 2*i-1)
-                Base.unsafe_bitsetindex!(data.chunks, b2, 2*i)
-            end
+"""
+    DiBitVector <: AbstractVector{UInt8}
+
+A bitvector whose elements are two bits wide, allowing
+storage of integer values between 0 and 3. Optimized
+for performance and memory savings.
+"""
+mutable struct DiBitVector <: AbstractVector{UInt8}
+    data::Vector{UInt64}
+    len::UInt
+
+    function DiBitVector(n::Integer, v::Integer)
+        if !(Int(v) in 0:3)
+            throw(ArgumentError("v must be in 0:3"))
         end
-        return new(data)
+        fv = (0x0000000000000000, 0x5555555555555555,
+        0xaaaaaaaaaaaaaaaa, 0xffffffffffffffff)[v + 1]
+        vec = Vector{UInt64}(undef, cld(n, 32))
+        fill!(vec, fv)
+        return new(vec, n % UInt)
     end
 end
 
-@inline checkbounds(D::DiBitVector, n::Integer) = n * 2 ≤ length(D.data) || throw(BoundsError(D, n))
+@inline Base.length(x::DiBitVector) = x.len % Int
+@inline Base.size(x::DiBitVector) = (length(x),)
 
-"""
-    _set_dibit!(D, n, v)
+@inline index(n::Integer) = ((n-1) >>> 5) + 1
+@inline offset(n::Integer) = ((n-1) << 1) & 63
 
-Sets index v of DiBitVector D to value n.
-"""
-function unsafe_set_dibit!(D::DiBitVector, n::Integer, v::Integer)
-    b1 = v >> 1 != 0
-    b2 = v & 0b01 != 0
-    o = n * 2 - 1
-    Base.unsafe_bitsetindex!(D.data.chunks, b1, o)
-    Base.unsafe_bitsetindex!(D.data.chunks, b2, o+1)
+@inline function Base.getindex(x::DiBitVector, i::Int)
+    @boundscheck checkbounds(x, i)
+    return UInt8((@inbounds x.data[index(i)] >>> offset(i)) & 3)
 end
 
-@inline function setindex!(D::DiBitVector, v::Integer, n::Integer) 
-    (0 ≤ v ≤ 3) || throw(DomainError(v, "Values must be between 0 and 3."))
-    @boundscheck checkbounds(D, n)
-    unsafe_set_dibit!(D, n, v)
+@inline function unsafe_setindex!(x::DiBitVector, v::UInt64, i::Int)
+    bits = @inbounds x.data[index(i)]
+    bits &= ~(UInt(3) << offset(i))
+    bits |= convert(UInt64, v) << offset(i)
+    @inbounds x.data[index(i)] = bits
+end
+    
+@inline function Base.setindex!(x::DiBitVector, v::Integer, i::Int)
+    v & 3 == v || throw(DomainError("Can only contain 0:3 (tried $v)"))
+    @boundscheck checkbounds(x, i)
+    unsafe_setindex!(x, convert(UInt64, v), i)
 end
 
-@inline function unsafe_get_dibit(D::DiBitVector, i::Integer)
-    b1 = Base.unsafe_bitgetindex(D.data.chunks, i*2 - 1)
-    b2 = Base.unsafe_bitgetindex(D.data.chunks, i*2)
-    return UInt8(b1 << 1 + b2)
+@inline function Base.push!(x::DiBitVector, v::Integer)
+    len = length(x)
+    len == length(x.data) << 5 && push!(x.data, zero(UInt))
+    @inbounds x[len+1] = convert(UInt64, v)
+    x.len = (len + 1) % UInt
+    return x
 end
 
-@inline function getindex(D::DiBitVector, n::Integer)
-    @boundscheck checkbounds(D, n) 
-    unsafe_get_dibit(D, n)
+@inline function Base.pop!(x::DiBitVector)
+    x.len == 0 && throw(ArgumentError("array must be non-empty"))
+    v = x[end]
+    x.len = (x.len - 1) % UInt
+    x.len == (length(x.data) -1) << 5 && pop!(x.data)
+    return v
 end
-
-@inline length(D::DiBitVector) = length(D.data) ÷ 2
-@inline size(D::DiBitVector) = (length(D),)
-
+#---------------
 export DiBitVector
 
 end # module
