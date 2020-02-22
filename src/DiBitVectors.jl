@@ -1,6 +1,6 @@
 module DiBitVectors
 
-import Base: getindex, setindex!, size, length
+import Base: getindex, setindex!, size, length, checkbounds
 
 struct DiBitVector <: AbstractVector{Bool}
     data::BitVector
@@ -57,7 +57,10 @@ end
 @inline length(D::DiBitVector) = length(D.data) ÷ 2
 @inline size(D::DiBitVector) = (length(D),)
 
-# include("Bio.jl")
+include("DiBit2.jl")
+include("benchmarks.jl")
 export DiBitVector
+export DiBitVector2
+export bench_get, bench_set!, make_data
 
 end # module
