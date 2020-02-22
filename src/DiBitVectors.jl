@@ -1,6 +1,7 @@
 module DiBitVectors
 
 import Base: getindex, setindex!, size, length
+using BitOperations
 
 struct DiBitVector <: AbstractVector{Bool}
     data::BitVector
@@ -14,8 +15,8 @@ struct DiBitVector <: AbstractVector{Bool}
             b1 = v >> 1 != 0
             b2 = v & 0x01 != 0
             @inbounds for i = 1:n
-                Base.unsafe_bitsetindex!(data.chunks, b1, 2*i-1)
-                Base.unsafe_bitsetindex!(data.chunks, b2, 2*i)
+                Base.unsafe_bitsetindex!(data.chunks, b1, 2*i)
+                Base.unsafe_bitsetindex!(data.chunks, b2, 2*i-1)
             end
         end
         return new(data)
@@ -30,32 +31,34 @@ end
 Sets index v of DiBitVector D to value n.
 """
 function unsafe_set_dibit!(D::DiBitVector, n::Integer, v::Integer)
-    b1 = v >> 1 != 0
-    b2 = v & 0b01 != 0
-    o = n * 2 - 1
-    Base.unsafe_bitsetindex!(D.data.chunks, b1, o)
-    Base.unsafe_bitsetindex!(D.data.chunks, b2, o+1)
+    chunk,pos = _chunk_pos(n)
+    D.data.chunks[chunk] = bset(D.data.chunks[chunk],pos:pos+1,v)
 end
 
-@inline function setindex!(D::DiBitVector, v::Integer, n::Integer) 
+@inline function setindex!(D::DiBitVector, v::Integer, n::Integer)
     (0 ≤ v ≤ 3) || throw(DomainError(v, "Values must be between 0 and 3."))
     @boundscheck checkbounds(D, n)
     unsafe_set_dibit!(D, n, v)
 end
 
 @inline function unsafe_get_dibit(D::DiBitVector, i::Integer)
-    b1 = Base.unsafe_bitgetindex(D.data.chunks, i*2 - 1)
-    b2 = Base.unsafe_bitgetindex(D.data.chunks, i*2)
-    return UInt8(b1 << 1 + b2)
+    chunk,pos = _chunk_pos(i)
+    UInt8( bget(D.data.chunks[chunk],pos:pos+1) )
 end
 
 @inline function getindex(D::DiBitVector, n::Integer)
-    @boundscheck checkbounds(D, n) 
+    @boundscheck checkbounds(D, n)
     unsafe_get_dibit(D, n)
 end
 
 @inline length(D::DiBitVector) = length(D.data) ÷ 2
 @inline size(D::DiBitVector) = (length(D),)
+
+@inline function _chunk_pos(n)
+    chunk = bget(n-1,5:63)+1 # 1-based chunk index
+    pos = 2bget(n-1,0:4) # 0-based bit position index
+    return (chunk,pos)
+end
 
 export DiBitVector
 
