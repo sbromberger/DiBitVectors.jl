@@ -59,6 +59,7 @@ end
 
 include("DiBit2.jl")
 include("DiBit3.jl")
+include("DiBit4.jl")
 include("benchmarks.jl")
 export DiBitVector
 export DiBitVector2
