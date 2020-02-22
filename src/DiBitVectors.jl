@@ -37,7 +37,7 @@ Sets index v of DiBitVector D to value n.
     Base.unsafe_bitsetindex!(D.data.chunks, b2, o+1)
 end
 
-@inline function setindex!(D::DiBitVector, v::Integer, n::Integer) 
+@inline function setindex!(D::DiBitVector, v::Integer, n::Integer)
     (0 ≤ v ≤ 3) || throw(DomainError(v, "Values must be between 0 and 3."))
     @boundscheck checkbounds(D, n)
     unsafe_set_dibit!(D, n, v)
@@ -50,7 +50,7 @@ end
 end
 
 @inline function getindex(D::DiBitVector, n::Integer)
-    @boundscheck checkbounds(D, n) 
+    @boundscheck checkbounds(D, n)
     unsafe_get_dibit(D, n)
 end
 
@@ -58,6 +58,7 @@ end
 @inline size(D::DiBitVector) = (length(D),)
 
 include("DiBit2.jl")
+include("DiBit3.jl")
 include("benchmarks.jl")
 export DiBitVector
 export DiBitVector2
