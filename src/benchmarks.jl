@@ -1,6 +1,7 @@
 # n = 100_000_000
 # b = DiBitVectors.DiBitVector(n);
 # b2 = DiBitVectors.DiBitVector2(n, 0)
+# b3 = DiBitVectors.DiBitVector3(n,0)
 # data = DiBitVectors.make_data(n)
 #
 using Random
@@ -17,7 +18,7 @@ end
      end
      n
  end
- 
+
  function make_data(n)
      inds = Random.shuffle(1:n)
      vals = rand(0:3, n)
