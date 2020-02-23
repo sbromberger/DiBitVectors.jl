@@ -42,5 +42,5 @@ end
     len = length(x)
     len == length(x.data) << 5 && push!(x.data, zero(UInt))
     @inbounds x[len+1] = convert(UInt64, v)
-    x.len = (len + 1) % UInt64
+    x.len = (len + 1) % UInt
 end
