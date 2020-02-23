@@ -8,6 +8,13 @@ using BenchmarkTools
 using Random
 using Statistics
 
+struct BenchResult
+    label::String
+    n::Int
+    fn::String  # "get" or "set"
+    result:: Float64  # median time
+end
+
 function bench_set!(x, data)
     @inbounds for i = 1:length(data.ii)
       x[data.ii[i]] = data.vv[i]
@@ -34,32 +41,29 @@ function make_seq_data(n)
     return(ii=inds, vv=vals, sumvv=sum(vals))
 end
 
-function benchmark_get_size_N(vecs, data)
-    medians = Vector{Float64}()
+function benchmark_size_N(vecs, data, fn::String)
+    res = Vector{BenchResult}()
+    n = length(data.ii)
     for v in vecs
-        println("running get size $(length(data.ii)) on vec $(typeof(v))")
-        vbench = @benchmark bench_get($v, $data)
-        med = median(vbench.times)
-        push!(medians, med)
-    end
-    return medians
-end
+        label = typeof(v)
+        println("running get size $n on vec $label")
+        if fn == "get"
+            vbench = @benchmark bench_get($v, $data)
+        else
+            vbench = @benchmark bench_set!($v, $data)
+        end
 
-function benchmark_set_size_N(vecs, data)
-    medians = Vector{Float64}()
-    for v in vecs
-        println("running set size $(length(data.ii)) on vec $(typeof(v))")
-        vbench = @benchmark bench_set!($v, $data)
         med = median(vbench.times)
-        push!(medians, med)
+        br = BenchResult("$label", n, fn, med)
+        push!(res, br)
     end
-    return medians
+    return res
 end
 
 function run_benchmarks(sizes, datatype = :random) 
 
-    benchget = Dict{Int, Vector{Float64}}() # size -> median timings for b1..b4
-    benchset = Dict{Int, Vector{Float64}}() # size -> median timings for b1..b4
+    benchget = Dict{Int, Vector{BenchResult}}() # size -> median timings for b1..b4
+    benchset = Dict{Int, Vector{BenchResult}}() # size -> median timings for b1..b4
 
     for n in sizes
         if datatype == :sequential
@@ -72,8 +76,8 @@ function run_benchmarks(sizes, datatype = :random)
         b2 = DiBitVectors.DiBitVector2(n, 0)
         b3 = DiBitVectors.DiBitVector3(n, 0)
         b4 = DiBitVectors.DiBitVector4(n, 0)
-        benchget[n] = benchmark_get_size_N([v0, b1, b2, b3, b4], data)
-        benchset[n] = benchmark_set_size_N([v0, b1, b2, b3, b4], data)
+        benchget[n] = benchmark_size_N([v0, b1, b2, b3, b4], data, "get")
+        benchset[n] = benchmark_size_N([v0, b1, b2, b3, b4], data, "set")
     end
     return (get=benchget, set=benchset)
 end
