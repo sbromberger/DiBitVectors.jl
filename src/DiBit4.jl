@@ -1,12 +1,10 @@
 # UInt32s
-mutable struct DiBitVector4 <: AbstractVector{UInt32}
+mutable struct DiBitVector4 <: AbstractVector{UInt8}
     data::Vector{UInt32}
     len::UInt
 
     function DiBitVector4(n::Integer, v::Integer)
-        if !(Int(v) in 0:3)
-            throw(ArgumentError("v must be in 0:3"))
-        end
+        checkrange(v)
         fv = (0x00000000, 0x55555555,
         0xaaaaaaaa, 0xffffffff)[v + 1]
         vec = Vector{UInt32}(undef, cld(n, 16))
@@ -15,6 +13,7 @@ mutable struct DiBitVector4 <: AbstractVector{UInt32}
     end
 end
 
+@inline checkrange(v) = v & 3 == v || throw(ArgumentError("Can only contain integer values between 0 and 3 (tried $v)"))
 @inline Base.length(x::DiBitVector4) = x.len % Int
 @inline Base.size(x::DiBitVector4) = (length(x),)
 
@@ -33,9 +32,11 @@ end
     @inbounds x.data[d4index(i)] = bits
 end
     
+@inline Base.setindex!(x::DiBitVector4, v, i::Int) = throw(ArgumentError("Can only contain integer values between 0 and 3 (tried $v)"))
+
 @inline function Base.setindex!(x::DiBitVector4, v::Integer, i::Int)
-    v & 3 == v || throw(DomainError("Can only contain 0:3 (tried $v)"))
     @boundscheck checkbounds(x, i)
+    checkrange(v)
     unsafe_setindex!(x, convert(UInt32, v), i)
 end
 
