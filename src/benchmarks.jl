@@ -29,8 +29,14 @@ function bench_get(x, data)
     n
 end
 
-function make_random_data(n)
-    inds = Random.shuffle(1:n)
+function make_random_data(n, seqlength=1)
+    @assert seqlength > 0
+    if seqlength==1
+        inds = Random.shuffle(1:n)
+    else
+        inds = Iterators.partition(1:n,seqlength) |> collect |>
+            Random.shuffle |> Iterators.flatten |> collect
+    end
     vals = rand(0:3, n)
     return (ii=inds, vv=vals, sumvv=sum(vals))
 end
@@ -60,7 +66,7 @@ function benchmark_size_N(vecs, data, fn::String)
     return res
 end
 
-function run_benchmarks(sizes, datatype = :random) 
+function run_benchmarks(sizes, datatype = :random, seqlength=1)
 
     benchget = Dict{Int, Vector{BenchResult}}() # size -> median timings for b1..b4
     benchset = Dict{Int, Vector{BenchResult}}() # size -> median timings for b1..b4
@@ -69,7 +75,7 @@ function run_benchmarks(sizes, datatype = :random)
         if datatype == :sequential
             data = make_seq_data(n)
         else
-            data = make_random_data(n)
+            data = make_random_data(n,seqlength)
         end
         v0 = zeros(UInt8, n)
         b1 = DiBitVectors.DiBitVector(n)
