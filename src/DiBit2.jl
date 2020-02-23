@@ -22,7 +22,7 @@ end
 
 @inline function Base.getindex(x::DiBitVector2, i::Int)
     @boundscheck checkbounds(x, i)
-    return (@inbounds x.data[index(i)] >>> offset(i)) & 3
+    return UInt8((@inbounds x.data[index(i)] >>> offset(i)) & 3)
 end
 
 @inline function unsafe_setindex!(x::DiBitVector2, v::UInt64, i::Int)
