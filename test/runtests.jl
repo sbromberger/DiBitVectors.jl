@@ -26,9 +26,7 @@ using DiBitVectors
     @test all(d3 .== 3)
     @test d3[1] == d3[end] == 3
 
-    @info "pre-push"
     push!(d3, 0)
-    @info "post-push"
     @test length(d3) == 31 && length(d3.data) == 1
     push!(d3, 1)
     @test length(d3) == 32 && length(d3.data) == 1
@@ -47,5 +45,11 @@ using DiBitVectors
     @test length(d3) == 30 && length(d3.data) == 1
     @test pop!(d3) == 3
     @test length(d3) == 29 && length(d3.data) == 1
+
+    @test zero(d3) == DiBitVector(length(d3))
+
+    @test_throws BoundsError d3[0]
+    @test_throws BoundsError d3[-1]
+    @test_throws BoundsError d3[99991]
 end
 

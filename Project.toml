@@ -1,0 +1,13 @@
+name = "DiBitVectors"
+uuid = "1d781980-c74a-44d0-9ec2-b658ff5df7eb"
+authors = ["Seth Bromberger <github@bromberger.com>"]
+version = "0.1.0"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
+
+[compat]
+julia = "1"

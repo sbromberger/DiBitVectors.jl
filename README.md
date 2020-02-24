@@ -5,5 +5,5 @@ from 0 to 3.
 
 Ongoing benchmarking is happening over in [DiBitBenchmarks.jl](https://github.com/sbromberger/DiBitBenchmarks.jl).
 
-![11](img/11.png)
+![11](img/11.jpg)
 

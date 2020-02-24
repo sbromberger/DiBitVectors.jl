@@ -1,6 +1,6 @@
 module DiBitVectors
 
-import Base: getindex, setindex!, size, length, checkbounds, push!, pop!
+import Base: getindex, setindex!, size, length, checkbounds, push!, pop!, zero
 
 """
     DiBitVector <: AbstractVector{UInt8}
@@ -24,6 +24,8 @@ mutable struct DiBitVector <: AbstractVector{UInt8}
         return new(vec, n % UInt)
     end
 end
+
+@inline checkbounds(D::DiBitVector, n::Integer) =  0 < n ≤ length(D.data) << 5 || throw(BoundsError(D, n))
 
 DiBitVector(n::Integer) = DiBitVector(n, 0)
 DiBitVector() = DiBitVector(0, 0)
@@ -55,8 +57,8 @@ end
 @inline function Base.push!(x::DiBitVector, v::Integer)
     len = length(x)
     len == length(x.data) << 5 && push!(x.data, zero(UInt))
-    @inbounds x[len+1] = convert(UInt64, v)
     x.len = (len + 1) % UInt
+    x[len+1] = convert(UInt64, v)
     return x
 end
 
@@ -67,7 +69,9 @@ end
     x.len == (length(x.data) -1) << 5 && pop!(x.data)
     return v
 end
-#---------------
+
+@inline zero(x::DiBitVector) = DiBitVector(x.len, 0)
+    
 export DiBitVector
 
 end # module
