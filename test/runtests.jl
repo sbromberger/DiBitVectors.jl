@@ -47,8 +47,5 @@ using DiBitVectors
     @test length(d3) == 30 && length(d3.data) == 1
     @test pop!(d3) == 3
     @test length(d3) == 29 && length(d3.data) == 1
-
-
-
 end
 
