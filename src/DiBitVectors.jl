@@ -25,6 +25,9 @@ mutable struct DiBitVector <: AbstractVector{UInt8}
     end
 end
 
+DiBitVector(n::Integer) = DiBitVector(n, 0)
+DiBitVector() = DiBitVector(0, 0)
+
 @inline Base.length(x::DiBitVector) = x.len % Int
 @inline Base.size(x::DiBitVector) = (length(x),)
 
