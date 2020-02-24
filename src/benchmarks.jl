@@ -34,8 +34,15 @@ function make_random_data(n, seqlength=1)
     if seqlength==1
         inds = Random.shuffle(1:n)
     else
-        inds = Iterators.partition(1:n,seqlength) |> collect |>
-            Random.shuffle |> Iterators.flatten |> collect
+        inds = Vector{Int}()
+        sizehint!(inds,n)
+        for i in Random.shuffle(1:seqlength:n)
+            for j in 0:seqlength-1
+                (i+j)<=n && push!(inds,i+j)
+            end
+        end
+        # inds = Iterators.partition(1:n,seqlength) |> collect |>
+            # Random.shuffle |> Iterators.flatten |> collect
     end
     vals = rand(0:3, n)
     return (ii=inds, vv=vals, sumvv=sum(vals))
@@ -108,3 +115,5 @@ function save_benchmarks(getset, labels::Vector{String}, prefix::String)
         end
     end
 end
+
+include("benchmarks_semirand.jl")
